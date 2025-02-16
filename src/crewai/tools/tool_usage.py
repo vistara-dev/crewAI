@@ -80,6 +80,8 @@ class ToolUsage:
             self._max_parsing_attempts = 2
             self._remember_format_after_usages = 4
 
+        self._max_parsing_attempts = 1
+
     def parse(self, tool_string: str):
         """Parse the tool string and return the tool calling."""
         return self._tool_calling(tool_string)
@@ -116,7 +118,7 @@ class ToolUsage:
                     self._printer.print(content=f"\n\n{error}\n", color="red")
                 return error
 
-        return f"{self._use(tool_string=tool_string, tool=tool, calling=calling)}"  # type: ignore # BUG?: "_use" of "ToolUsage" does not return a value (it only ever returns None)
+        return self._use(tool_string=tool_string, tool=tool, calling=calling)
 
     def _use(
         self,
@@ -191,7 +193,7 @@ class ToolUsage:
                     )
                     error = ToolUsageErrorException(
                         f'\n{error_message}.\nMoving on then. {self._i18n.slice("format").format(tool_names=self.tools_names)}'
-                    ).message
+                    )
                     self.task.increment_tools_errors()
                     if self.agent.verbose:
                         self._printer.print(

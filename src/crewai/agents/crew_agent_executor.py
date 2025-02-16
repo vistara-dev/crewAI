@@ -276,7 +276,7 @@ class CrewAgentExecutor(CrewAgentExecutorMixin):
 
         if isinstance(tool_calling, ToolUsageErrorException):
             tool_result = tool_calling.message
-            return ToolResult(result=tool_result, result_as_answer=False)
+            return ToolResult(result=tool_result, result_as_answer=True)
         else:
             if tool_calling.tool_name.casefold().strip() in [
                 name.casefold().strip() for name in self.tool_name_to_tool_map
@@ -286,6 +286,11 @@ class CrewAgentExecutor(CrewAgentExecutorMixin):
                 tool_result = tool_usage.use(tool_calling, agent_action.text)
                 tool = self.tool_name_to_tool_map.get(tool_calling.tool_name)
                 if tool:
+                    if isinstance(tool_result, ToolUsageErrorException):
+                        return ToolResult(
+                            result=tool_result.message,
+                            result_as_answer=True
+                        )
                     return ToolResult(
                         result=tool_result, result_as_answer=tool.result_as_answer
                     )
@@ -294,6 +299,8 @@ class CrewAgentExecutor(CrewAgentExecutorMixin):
                     tool=tool_calling.tool_name,
                     tools=", ".join([tool.name.casefold() for tool in self.tools]),
                 )
+        if isinstance(tool_result, ToolUsageErrorException):
+            return ToolResult(tool_result.message, result_as_answer=True)
         return ToolResult(result=tool_result, result_as_answer=False)
 
     def _summarize_messages(self) -> None:
